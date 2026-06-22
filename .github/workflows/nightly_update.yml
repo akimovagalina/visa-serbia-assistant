@@ -13,6 +13,8 @@ jobs:
     steps:
     - name: Check out code repository
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 1 # Скачиваем репозиторий вместе со всеми JSON и папкой chroma_db!
 
     - name: Set up Python Environment
       uses: actions/setup-python@v5
@@ -23,7 +25,7 @@ jobs:
     - name: Install System Dependencies
       run: |
         pip install --upgrade pip
-        pip install telethon chromadb cohere langchain-cohere beautifulsoup4 requests
+        pip install telethon chromadb>=0.4.24 protobuf==4.25.3 cohere langchain-cohere beautifulsoup4 requests
 
     - name: Run Telegram Scraper (Incremental Sync)
       env:
@@ -34,16 +36,21 @@ jobs:
     - name: Process and Tag Structural Metadata
       run: python process_data.py
 
-    - name: Rebuild ChromaDB Vector Database
-      env:
-        COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
-      run: python build_vector_db.py
+#    - name: Rebuild ChromaDB Vector Database
+#      env:
+#        COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+#      run: python build_vector_db.py
+
 
     - name: Commit and Securely Push Updated Database
       run: |
         git config --global user.name "Visa Assistant Bot"
         git config --global user.email "actions@github.com"
-        git add raw_visa_data.json processed_visa_data.json chroma_db/
+        
+        # Забираем возможные изменения с сервера перед пушем, чтобы избежать конфликтов
+        git pull origin main --no-rebase || true
+        
+        git add raw_visa_data.json processed_visa_data.json # chroma_db/
         # Only commit if there are actually new changes to prevent blank commits
         git diff-index --quiet HEAD || git commit -m "🤖 Auto-updated visa database with latest chat intel [skip ci]"
         git push origin main
