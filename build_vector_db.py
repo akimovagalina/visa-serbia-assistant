@@ -77,7 +77,7 @@ def build_database():
         elapsed_time = time.time() - start_time
         print(f"🚀 Cloud-Indexed {processed_count}/{len(data_to_process)} новых строк... (Elapsed: {elapsed_time:.1f}s)")
         
-        time.sleep(3.0)
+        time.sleep(15.0)
 
     print(f"\n🎉 SUCCESS! База данных успешно дополнена новыми записями.")
     print(f"Общее количество объектов в ChromaDB: {collection.count()}")
