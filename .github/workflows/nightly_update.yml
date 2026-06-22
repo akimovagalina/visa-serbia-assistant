@@ -1,0 +1,49 @@
+name: Nightly Visa Database Auto-Refresh
+
+on:
+  schedule:
+    # Runs everyday at 03:00 AM UTC (5:00 AM Serbian Time)
+    - cron: '0 3 * * *'
+  workflow_dispatch: # Allows you to trigger this update manually from the GitHub website!
+
+jobs:
+  refresh-database:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python Environment
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install System Dependencies
+      run: |
+        pip install --upgrade pip
+        pip install telethon chromadb cohere langchain-cohere beautifulsoup4 requests
+
+    - name: Run Telegram Scraper (Incremental Sync)
+      env:
+        TG_API_ID: ${{ secrets.TG_API_ID }}
+        TG_API_HASH: ${{ secrets.TG_API_HASH }}
+      run: python get_telegram_data.py
+
+    - name: Process and Tag Structural Metadata
+      run: python process_data.py
+
+    - name: Rebuild ChromaDB Vector Database
+      env:
+        COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+      run: python build_vector_db.py
+
+    - name: Commit and Securely Push Updated Database
+      run: |
+        git config --global user.name "Visa Assistant Bot"
+        git config --global user.email "actions@github.com"
+        git add raw_visa_data.json processed_visa_data.json chroma_db/
+        # Only commit if there are actually new changes to prevent blank commits
+        git diff-index --quiet HEAD || git commit -m "🤖 Auto-updated visa database with latest chat intel [skip ci]"
+        git push origin main
