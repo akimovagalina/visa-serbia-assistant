@@ -8,7 +8,7 @@ INPUT_FILE = 'processed_visa_data.json'
 DB_DIR = './chroma_db'
 
 # Токен Cohere API
-COHERE_API_KEY = "cohere_hdaOdzgf4yMM36LbMlYq6RfQZpN1EHFox4rBeGiM2LSg5R"  # Ваш ключ
+COHERE_API_KEY = "COHERE_API_KEY"  # Ваш ключ
 
 # Ограничение для стабильности работы на бесплатном тарифе (0 — без ограничений)
 MAX_RECORDS_FOR_NOW = 10000 

@@ -6,8 +6,8 @@ import telebot
 from langchain_cohere import CohereEmbeddings
 
 # --- НАСТРОЙКИ КЛЮЧЕЙ ---
-BOT_TOKEN = "8858235201:AAH3ALfj2YtvU56qgPBcs9eS0Iy4DFun0CM"
-COHERE_API_KEY = "cohere_hdaOdzgf4yMM36LbMlYq6RfQZpN1EHFox4rBeGiM2LSg5R"  # Ваш ключ
+BOT_TOKEN = st.secrets["TELEGRAM_BOT_TOKEN"]
+COHERE_API_KEY = st.secrets["COHERE_API_KEY"]
 
 DB_DIR = './chroma_db'
 RAW_JSON_FILE = 'raw_visa_data.json'

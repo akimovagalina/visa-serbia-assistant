@@ -5,7 +5,7 @@ import cohere
 from langchain_cohere import CohereEmbeddings
 
 DB_DIR = './chroma_db'
-COHERE_API_KEY = "cohere_hdaOdzgf4yMM36LbMlYq6RfQZpN1EHFox4rBeGiM2LSg5R"  # Ваш ключ
+COHERE_API_KEY = "COHERE_API_KEY"  # Ваш ключ
 RAW_JSON_FILE = 'raw_visa_data.json'
 
 def load_raw_messages():
