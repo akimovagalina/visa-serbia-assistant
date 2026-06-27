@@ -27,25 +27,32 @@ def build_database():
     with open(INPUT_FILE, 'r', encoding='utf-8') as f:
         all_data = json.load(f)
 
-    # --- ИСПРАВЛЕНИЕ: ПРОВЕРКА СУЩЕСТВУЮЩИХ ЗАПИСЕЙ ---
+    # --- ПРОВЕРКА СУЩЕСТВУЮЩИХ ЗАПИСЕЙ ---
     existing_records = collection.get()
     existing_ids = set(existing_records['ids']) if existing_records and 'ids' in existing_records else set()
     print(f"📋 В базе уже находится векторов: {len(existing_ids)}")
+
+    # --- УМНЫЙ ПРЕДОХРАНИТЕЛЬ ДЛЯ НОЧНОГО РОБОТА ---
+    if len(existing_ids) > 0:
+        # Если база не пустая, берем только самый конец файла (последние 500 постов)
+        # Это защитит нас от попыток векторизовать старый 28-тысячный архив
+        print("🔄 База уже содержит данные. Включаем режим ночной дозаписи последних 500 постов...")
+        all_data = all_data[-500:]
 
     # Фильтруем данные, оставляя ТОЛЬКО те сообщения, которых НЕТ в базе
     data_to_process = [msg for msg in all_data if str(msg.get('id')) not in existing_ids]
 
     if not data_to_process:
-        print("💤 Все сообщения уже проиндексированы. База находится в актуальном состоянии!")
+        print("💤 Все новые сообщения уже проиндексированы. База находится в актуальном состоянии!")
         print(f"Итого строк в вашей ChromaDB: {collection.count()}")
         return
 
     print(f"🧬 Обнаружено новых сообщений для векторизации: {len(data_to_process)}")
 
-    # Если новых сообщений слишком много (первый запуск), ограничим порцию для стабильности
+    # Если это самый первый запуск на чистой базе, ограничим порцию до 10 000
     if len(existing_ids) == 0 and len(data_to_process) > 10000:
-        print("✂️ Первичная сборка: берем свежий батч в 10 000 строк.")
-        data_to_process = data_to_process[:10000]
+        print("✂️ Первичная сборка: берем свежий батч в 10 000 строк с конца файла.")
+        data_to_process = data_to_process[-10000:]
 
     start_time = time.time()
     chunk_size = 90
@@ -77,6 +84,7 @@ def build_database():
         elapsed_time = time.time() - start_time
         print(f"🚀 Cloud-Indexed {processed_count}/{len(data_to_process)} новых строк... (Elapsed: {elapsed_time:.1f}s)")
         
+        # Пауза 15 секунд для обхода лимитов скорости бесплатного тарифа
         time.sleep(15.0)
 
     print(f"\n🎉 SUCCESS! База данных успешно дополнена новыми записями.")
